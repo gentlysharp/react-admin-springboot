@@ -2,7 +2,6 @@ package com.example.reactspringboot.post;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.rest.core.config.Projection;
 
 import java.sql.Timestamp;
@@ -12,6 +11,7 @@ public interface PostProjection {
 
     @JsonProperty("id")
     Long getSeq();
+
     String getTitle();
     String getBody();
 

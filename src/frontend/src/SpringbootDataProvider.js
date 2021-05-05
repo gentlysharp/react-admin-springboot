@@ -1,4 +1,3 @@
-import { stringify } from "query-string";
 import {
   fetchUtils,
   GET_LIST,
@@ -25,22 +24,35 @@ import {
  */
 export default (apiUrl, httpClient = fetchUtils.fetchJson) => {
   /**
+   * apiUrl을 사용하면 개발시 CORS에러를 반환할 수 있으므로 package.json의 proxy를 사용하여 url을 결정하고
+   * 현재 소스에서는 apiUrl을 사용하지 않는다. 필요시 사용한다.
+   * 
+   * 참조링크
+   * https://snowdeer.github.io/openshift/2020/06/13/react-for-cors-using-proxy/
+   */
+  // console.log(apiUrl);
+
+  /**
      * @param {String} type One of the constants appearing at the top if this file, e.g. 'UPDATE'
      * @param {String} resource Name of the resource to fetch, e.g. 'posts'
      * @param {Object} params The data request params, depending on the type
      * @returns {Object} { url, options } The HTTP request parameters
      */
   const convertDataRequestToHTTP = (type, resource, params) => {
+    // console.log(type, "resouece:",resource, params);
     let url = "";
     const options = {};
     switch (type) {
       case GET_LIST: {
         const { page, perPage } = params.pagination;
-        url = `${apiUrl}/${resource}?page=${page - 1}&size=${perPage}`;
+        const {field,order} = params.sort;
+        // url = `${apiUrl}/${resource}?page=${page - 1}&size=${perPage}&sort=${field},${order}`;
+        url = `/${resource}?page=${page - 1}&size=${perPage}&sort=${field},${order}`;
         break;
       }
       case GET_ONE:
-        url = `${apiUrl}/${resource}/${params.id}`;
+        // url = `${apiUrl}/${resource}/${params.id}`;
+        url = `/${resource}/${params.id}`;
         break;
       case GET_MANY: {
         const query = {
@@ -48,26 +60,31 @@ export default (apiUrl, httpClient = fetchUtils.fetchJson) => {
         };
         let idStr = "";
         const queryString = params.ids.map(id => idStr + `id=${id}`);
-        url = `${apiUrl}/${resource}?${idStr}}`;
+        // url = `${apiUrl}/${resource}?${idStr}}`;
+        url = `/${resource}?${idStr}}`;
         break;
       }
       case GET_MANY_REFERENCE: {
         const { page, perPage } = params.pagination;
-        url = `${apiUrl}/${resource}?page=${page - 1}&size=${perPage}`;
+        // url = `${apiUrl}/${resource}?page=${page - 1}&size=${perPage}`;
+        url = `/${resource}?page=${page - 1}&size=${perPage}`;
         break;
       }
       case UPDATE:
-        url = `${apiUrl}/${resource}/${params.id}`;
-        options.method = "PUT";
+        // url = `${apiUrl}/${resource}/${params.id}`;
+        url = `/${resource}/${Number(params.id)}`;
+        options.method = "PATCH";
         options.body = JSON.stringify(params.data);
         break;
       case CREATE:
-        url = `${apiUrl}/${resource}`;
+        // url = `${apiUrl}/${resource}`;
+        url = `/${resource}`;
         options.method = "POST";
         options.body = JSON.stringify(params.data);
         break;
       case DELETE:
-        url = `${apiUrl}/${resource}/${params.id}`;
+        // url = `${apiUrl}/${resource}/${params.id}`;
+        url = `/${resource}/${Number(params.id)}`;
         options.method = "DELETE";
         break;
       default:
@@ -85,21 +102,25 @@ export default (apiUrl, httpClient = fetchUtils.fetchJson) => {
      */
   const convertHTTPResponse = (response, type, resource, params) => {
     const { headers, json } = response;
+    // console.log(json,response, type, resource, params);
     switch (type) {
       case GET_LIST:
       case GET_MANY_REFERENCE:
-        if (!json.hasOwnProperty("totalElements")) {
+        if (!json.page.hasOwnProperty("totalElements")) {
           throw new Error(
             "The numberOfElements property must be must be present in the Json response"
           );
         }
         return {
-          data: json.content,
-          total: parseInt(json.totalElements, 10)
+          // data: json.content,
+          data: json._embedded[`${resource}`],
+          total: parseInt(json.page.totalElements, 10)
         };
       case CREATE:
+        // console.log(params,json)
         return { data: { ...params.data, id: json.id } };
       default:
+        // console.log("default",json,response)
         return { data: json };
     }
   };
@@ -115,7 +136,8 @@ export default (apiUrl, httpClient = fetchUtils.fetchJson) => {
     if (type === UPDATE_MANY) {
       return Promise.all(
         params.ids.map(id =>
-          httpClient(`${apiUrl}/${resource}/${id}`, {
+          // httpClient(`${apiUrl}/${resource}/${id}`, {
+          httpClient(`/${resource}/${id}`, {
             method: "PUT",
             body: JSON.stringify(params.data)
           })
@@ -128,7 +150,8 @@ export default (apiUrl, httpClient = fetchUtils.fetchJson) => {
     if (type === DELETE_MANY) {
       return Promise.all(
         params.ids.map(id =>
-          httpClient(`${apiUrl}/${resource}/${id}`, {
+          // httpClient(`${apiUrl}/${resource}/${id}`, {
+          httpClient(`/${resource}/${id}`, {
             method: "DELETE"
           })
         )
