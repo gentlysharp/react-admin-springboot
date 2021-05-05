@@ -79,7 +79,7 @@ http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
                 <artifactId>frontend-maven-plugin</artifactId>
                 <version>1.6</version>
                 <configuration>
-                    <workingDirectory>frontend</workingDirectory>
+                    <workingDirectory>src/frontend</workingDirectory>
                     <installDirectory>target</installDirectory>
                 </configuration>
                 <executions>
@@ -122,7 +122,7 @@ http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
                         <configuration>
                             <target>
                                 <copy todir="${project.build.directory}/classes/public">
-                                    <fileset dir="${project.basedir}/frontend/build"/>
+                                    <fileset dir="${project.basedir}/src/frontend/build"/>
                                 </copy>
                             </target>
                         </configuration>
