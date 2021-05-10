@@ -42,6 +42,12 @@ export default (apiUrl, httpClient = fetchUtils.fetchJson) => {
     // console.log(type, "resouece:",resource, params);
     let url = "";
     const options = {};
+    // if (!options.headers) {
+    //   options.headers = new Headers({ Accept: 'application/json' });
+    // }
+    // const { token } = JSON.parse(localStorage.getItem('auth'));
+    // options.headers.set('Authorization', `Bearer ${token}`);
+
     switch (type) {
       case GET_LIST: {
         const { page, perPage } = params.pagination;
